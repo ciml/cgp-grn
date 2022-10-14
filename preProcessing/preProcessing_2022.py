@@ -5,6 +5,7 @@ from sklearn.model_selection import ShuffleSplit
 import matplotlib.pyplot as plt
 from os.path import exists
 import gc
+from time import perf_counter
 
 class Pseudotime:
     def __init__(self, n_pseudotimes, pseudotime_file, pseudotimes = [], ordered_pseudotimes = []):
@@ -114,38 +115,50 @@ class ExpressionData:
 
     def processData(self, n_pseudotime, geneIndex):
         currentGeneName = self.expression_file.T.columns[geneIndex]
-        indexesToRemove = []
+        #indexesToRemove = []
         currentCellExpressionData = []
+        currentTimePoints = []
         for i in range(len(self.pseudotime_object.ordered_pseudotimes)):
             currentCells = self.pseudotime_object.pseudotimes[n_pseudotime][self.pseudotime_object.ordered_pseudotimes[i]]
             if len(currentCells) == 1:
                 currentED = self.expression_file[currentCells[0]][geneIndex]
-                if currentED == 0:
-                    indexesToRemove.append(i)
-                else:
+                if currentED != 0:
                     currentCellExpressionData.append(self.expression_file[currentCells[0]][geneIndex])
+                    currentTimePoints.append(self.pseudotime_object.ordered_pseudotimes[i])
+                #else:
+                #    indexesToRemove.append(i)
                 
             else:
                 ptValue = self.pseudotime_object.ordered_pseudotimes[i]
                 currentED = self.processedPTs[ptValue][geneIndex]
-                if currentED == 0:
-                    for k in range(len(self.pseudotime_object.ordered_pseudotimes)):
-                        if self.pseudotime_object.ordered_pseudotimes[k] == ptValue:
-                            indexesToRemove.append(k)
-                else:             
+                if currentED != 0:          
                     currentCellExpressionData.append(self.processedPTs[ptValue][geneIndex])
+                    currentTimePoints.append(ptValue)
+                #else:
+                #    for k in range(len(self.pseudotime_object.ordered_pseudotimes)):
+                #        if self.pseudotime_object.ordered_pseudotimes[k] == ptValue:
+                #            indexesToRemove.append(k)                       
         
-        currentTimePoints = []
-        for i in range(len(self.pseudotime_object.ordered_pseudotimes)):
-            if i not in indexesToRemove:
-                currentTimePoints.append(self.pseudotime_object.ordered_pseudotimes[i])
-                
+        #currentTimePoints = []
+        #for i in range(len(self.pseudotime_object.ordered_pseudotimes)):
+        #    if i not in indexesToRemove:
+        #        currentTimePoints.append(self.pseudotime_object.ordered_pseudotimes[i])
+
+        #print(currentTimePoints == currentTimePoints2)
         #best_smooth = self.calculateSmooth(currentCellExpressionData, self.pseudotime_object.ordered_pseudotimes)
         if len(currentTimePoints) < 2:
             print("Not enought expression values for gene: ", currentGeneName) ##aqui colocar > 1
-        else:                
-            best_smooth = self.calculateSmooth(currentCellExpressionData, currentTimePoints)
+        else:
+            #t1_start = perf_counter()
+            #best_smooth = self.calculateSmooth(currentCellExpressionData, currentTimePoints) #descomentar aqui para voltar a determinar o melhor smooth
+            #t1_stop = perf_counter()
+            #print("Tempo de calculo do smooth:", t1_stop-t1_start)
+            #print(len(currentTimePoints))
+            best_smooth = 0.99
+            #t1_start = perf_counter()
             self.generateSplineCurve(currentCellExpressionData, self.pseudotime_object.ordered_pseudotimes, best_smooth, currentTimePoints, geneIndex)
+            #t1_stop = perf_counter()
+            #print("Tempo de geracao do arquivo:", t1_stop-t1_start)            
         #print(best_smooth)
         gc.collect()
        
@@ -167,8 +180,11 @@ ExprFile = ExprFileT.T
 ExprData = ExpressionData(len(ExprFile.T.columns), ExprFile, pseudotime)
 
 print("Processing expression data...")
+#Só tem um pseudotime, então o parâmetro nesse caso é só o 0 mesmo
 ExprData.processPTs(0)
+
 currentPercentage = -1
+#Para cada gene no conjunto de dados, realiza o processamento (ExprData.processData(n_pseudotime, gene)), n_pseudotime = 0 sempre nesse caso.
 for gene in range(len(ExprFile.T.columns)):
     printString = str(gene + 1) + " / " + str(len(ExprFile.T.columns))
     print(printString)
