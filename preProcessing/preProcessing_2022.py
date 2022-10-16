@@ -107,6 +107,7 @@ class ExpressionData:
         currentDict[currentGeneName] = ys
         df = pd.DataFrame(data = currentDict, index=timePoints)
         df.T.to_csv('splineData.csv', mode='a')
+        df.to_hdf('splineData.h5', mode='a',append=True)
         del df
         gc.collect()
 

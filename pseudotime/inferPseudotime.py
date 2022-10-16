@@ -14,7 +14,7 @@ from sklearn.decomposition import KernelPCA
 from time import perf_counter
 
 
-targets = pd.read_hdf('train_cite_inputs.h5', start=70500, index_col=0)
+targets = pd.read_hdf('../data/train_cite_inputs.h5', start=70500, index_col=0)
 
 print(targets)
 
@@ -99,13 +99,15 @@ slingshot = Slingshot(data, cluster_labels_onehot, debug_level='verbose')
 
 slingshot.fit(num_epochs=10, debug_axes=axes)
 
+plt.savefig("slingshot1.png");
+
 fig, axes = plt.subplots(ncols=2, figsize=(12, 4))
 axes[0].set_title('Clusters')
 axes[1].set_title('Pseudotime')
 slingshot.plotter.curves(axes[0], slingshot.curves)
 slingshot.plotter.clusters(axes[0], labels=np.arange(slingshot.num_clusters), s=4, alpha=0.5)
 slingshot.plotter.clusters(axes[1], color_mode='pseudotime', s=5)
-
+plt.savefig("slingshot2.png");
 
 # Exportação dos valores de pseudotime unificados inferidos
 
