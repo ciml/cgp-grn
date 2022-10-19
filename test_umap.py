@@ -1,6 +1,5 @@
-from ipaddress import collapse_addresses
+
 import os
-from this import d
 import numpy as np
 import scipy
 import pandas as pd
@@ -18,7 +17,9 @@ DATA_DIR             = "/home/camata/git/cgp-grn/data/"
 FP_CITE_TRAIN_INPUTS = os.path.join(DATA_DIR,"train_cite_inputs.h5")
 FP_CELL_METADATA     = os.path.join(DATA_DIR,"metadata.csv")
 
-cite_train = pd.read_hdf(FP_CITE_TRAIN_INPUTS,start=65000, index_col=0)
+N_EPOCHS_ = 30
+
+cite_train = pd.read_hdf(FP_CITE_TRAIN_INPUTS,start=0, index_col=0)
 
 cell_names = []
 drop_genes = []
@@ -44,7 +45,7 @@ print("Number of genes: %d" %(dropped.shape[1]))
 
 # dimension reduction using UMAP
 print("Running umap...")
-mapper = umap.UMAP( n_neighbors=50,min_dist=0.0,n_components=2,n_epochs=30,low_memory=True).fit_transform(dropped.values)
+mapper = umap.UMAP( n_neighbors=50,min_dist=0.0,n_components=2,n_epochs=N_EPOCHS_,low_memory=True).fit_transform(dropped.values)
 
 plt.scatter(mapper[:, 0], mapper[:, 1],s=0.1)
 plt.savefig('umap_scatter.png')
@@ -63,7 +64,7 @@ plt.scatter(mapper[~clustered, 0],
             mapper[~clustered, 1],
             color=(0.5, 0.5, 0.5),
             s=0.1,
-            alpha=0.5)
+            alpha=0.25)
 plt.scatter(mapper[clustered, 0],
             mapper[clustered, 1],
             c=labels[clustered],
@@ -82,7 +83,8 @@ custom_ylim = (-12, 12)
 
 print("Running Slingshot...")
 slingshot = Slingshot(mapper, cluster_labels_onehot, debug_level='verbose')
-slingshot.fit(num_epochs=10, debug_axes=axes)
+slingshot.fit(num_epochs=N_EPOCHS_, debug_axes=axes)
+plt.savefig("slingshot_debug.png")
 
 fig, axes = plt.subplots(ncols=2, figsize=(12, 4))
 axes[0].set_title('Clusters')
