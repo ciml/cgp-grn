@@ -107,7 +107,7 @@ class ExpressionData:
         currentDict[currentGeneName] = ys
         df = pd.DataFrame(data = currentDict, index=timePoints)
         df.T.to_csv('splineData.csv', mode='a')
-        df.to_hdf('splineData.h5', mode='a',append=True)
+        df.T.to_hdf('splineData.h5', mode='a',append=True, key='spline')
         del df
         gc.collect()
 
@@ -175,7 +175,7 @@ pseudotime.processPseudotime(0)
 
 print("Reading expression data file...")
 #ExprFile = pd.read_csv('ExpressionData_teste.csv', index_col=0)
-ExprFileT = pd.read_hdf('train_cite_inputs.h5', start=0, index_col=0)
+ExprFileT = pd.read_hdf('../data/train_cite_inputs.h5', start=0, index_col=0)
 ExprFile = ExprFileT.T
 
 ExprData = ExpressionData(len(ExprFile.T.columns), ExprFile, pseudotime)

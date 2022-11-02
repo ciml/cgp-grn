@@ -14,7 +14,7 @@ from sklearn.decomposition import KernelPCA
 from time import perf_counter
 
 
-targets = pd.read_hdf('../data/train_cite_inputs.h5', start=70500, index_col=0)
+targets = pd.read_hdf('../data/train_cite_targets.h5', start=0, index_col=0)
 
 print(targets)
 

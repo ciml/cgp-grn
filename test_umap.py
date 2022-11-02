@@ -6,6 +6,8 @@ import pandas as pd
 import tables
 import matplotlib.pyplot as plt
 
+from  sklearn.cluster import KMeans
+
 import umap
 import umap.plot 
 
@@ -14,10 +16,13 @@ from slingshot import Slingshot
 
 
 DATA_DIR             = "/home/camata/git/cgp-grn/data/"
-FP_CITE_TRAIN_INPUTS = os.path.join(DATA_DIR,"train_cite_inputs.h5")
+OUTPUT_DIR           = "/home/camata/git/cgp-grn/output/"
+FP_CITE_TRAIN_INPUTS = os.path.join(DATA_DIR,"train_cite_targets.h5")
 FP_CELL_METADATA     = os.path.join(DATA_DIR,"metadata.csv")
+CSV_PTIME_OUTPUT     = os.path.join(OUTPUT_DIR,"train_cite_targets_ptime.csv")
+H5_PTIME_OUTPUT      = os.path.join(OUTPUT_DIR,"train_cite_targets_ptime.h5")
 
-N_EPOCHS_ = 30
+N_EPOCHS_ = 10
 
 cite_train = pd.read_hdf(FP_CITE_TRAIN_INPUTS,start=0, index_col=0)
 
@@ -50,15 +55,16 @@ mapper = umap.UMAP( n_neighbors=50,min_dist=0.0,n_components=2,n_epochs=N_EPOCHS
 plt.scatter(mapper[:, 0], mapper[:, 1],s=0.1)
 plt.savefig('umap_scatter.png')
 
-# cluster
-print("Running hdbscan...")
-hdbscan_labels = hdbscan.HDBSCAN(
+# clustering using Kmeans
+print("Running Clustering...")
+labels = hdbscan.HDBSCAN(
     min_samples=10,
     min_cluster_size=500,
 ).fit_predict(mapper)
 
-clustered = (hdbscan_labels >= 0)
-labels = hdbscan_labels
+#labels = KMeans(n_clusters=5, random_state=42).fit_predict(mapper) ##min clusters depende dos dados, pq?
+
+clustered = (labels >= 0)
 
 plt.scatter(mapper[~clustered, 0],
             mapper[~clustered, 1],
@@ -105,6 +111,6 @@ for i in range(len(cell_names)):
     currentPT   = normalized_pt[i]
     dict_PT[currentCell] = currentPT
 
-outFileName = 'cell_pseudotime.h5'
 dfPT = pd.DataFrame(data=dict_PT, index=['pseudotime'])
-dfPT.T.to_hdf(outFileName,key='pseudotime')
+dfPT.T.to_csv(CSV_PTIME_OUTPUT);
+dfPT.T.to_hdf(H5_PTIME_OUTPUT,key='pseudotime')
